@@ -41,7 +41,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Dev-Ramps/DevRamps-Step-Sdk-TypeScript.git"
+    "url": "git+https://github.com/Dev-Ramps/DevRamps-Step-Sdk-TypeScript.git"
   },
   "bugs": {
     "url": "https://github.com/Dev-Ramps/DevRamps-Step-Sdk-TypeScript/issues"
