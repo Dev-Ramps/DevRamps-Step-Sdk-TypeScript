@@ -1,11 +1,11 @@
-# @devramps/step-sdk
+# @devramps/@devramps/sdk-typescript
 
 SDK for building custom deployment steps for DevRamps. Create simple one-shot steps or polling steps for long-running operations, with optional approval workflows.
 
 ## Installation
 
 ```bash
-npm install @devramps/step-sdk
+npm install @devramps/sdk-typescript
 ```
 
 ## Requirements
@@ -20,7 +20,7 @@ npm install @devramps/step-sdk
 A simple step runs once and returns a result.
 
 ```typescript
-import { SimpleStep, Step, StepOutputs, StepRegistry } from "@devramps/step-sdk";
+import { SimpleStep, Step, StepOutputs, StepRegistry } from "@devramps/@devramps/sdk-typescript";
 import { z } from "zod";
 
 // Define your input schema
@@ -54,7 +54,7 @@ StepRegistry.run([DeployStep]);
 A polling step is used for long-running operations that need status checks.
 
 ```typescript
-import { PollingStep, Step, StepOutputs, StepRegistry } from "@devramps/step-sdk";
+import { PollingStep, Step, StepOutputs, StepRegistry } from "@devramps/@devramps/sdk-typescript";
 import { z } from "zod";
 
 const BuildSchema = z.object({
@@ -109,7 +109,7 @@ Steps can require approval before execution by overriding the `prepare` method.
 ### Simple Step with Approval
 
 ```typescript
-import { SimpleStep, Step, StepOutputs, ApprovalContext } from "@devramps/step-sdk";
+import { SimpleStep, Step, StepOutputs, ApprovalContext } from "@devramps/@devramps/sdk-typescript";
 import { z } from "zod";
 
 const DeleteUserSchema = z.object({
@@ -146,7 +146,7 @@ class DeleteUserStep extends SimpleStep<DeleteUserParams> {
 ### Polling Step with Approval
 
 ```typescript
-import { PollingStep, Step, StepOutputs, ApprovalContext } from "@devramps/step-sdk";
+import { PollingStep, Step, StepOutputs, ApprovalContext } from "@devramps/@devramps/sdk-typescript";
 import { z } from "zod";
 
 const ProductionDeploySchema = z.object({
@@ -202,7 +202,7 @@ class ProductionDeployStep extends PollingStep<ProductionDeployParams, DeploySta
 The SDK provides helper functions for creating step outputs:
 
 ```typescript
-import { StepOutputs } from "@devramps/step-sdk";
+import { StepOutputs } from "@devramps/@devramps/sdk-typescript";
 
 // Success with optional data
 StepOutputs.success();
@@ -247,7 +247,7 @@ The `@Step` decorator adds metadata to your step class:
 The registry handles CLI argument parsing and step execution:
 
 ```typescript
-import { StepRegistry } from "@devramps/step-sdk";
+import { StepRegistry } from "@devramps/@devramps/sdk-typescript";
 
 // Register all your steps
 StepRegistry.run([
@@ -372,7 +372,7 @@ import {
   StepOutputs,
   StepRegistry,
   ApprovalContext,
-} from "@devramps/step-sdk";
+} from "@devramps/@devramps/sdk-typescript";
 import { z } from "zod";
 
 // Schema definitions
