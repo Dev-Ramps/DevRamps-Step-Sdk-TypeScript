@@ -21,10 +21,18 @@ export interface StepConfig<S extends ZodType> {
  * ```typescript
  * @Step({ name: "My Step", type: "my-step", schema: mySchema })
  * class MyStep extends SimpleStep<MyParams> {
+ *   constructor(private apiClient: ApiClient) {
+ *     super();
+ *   }
+ *
  *   async run(params: MyParams): Promise<RunOutput> {
+ *     await this.apiClient.doSomething();
  *     return StepOutputs.success();
  *   }
  * }
+ *
+ * // Register with dependencies injected
+ * StepRegistry.run([new MyStep(apiClient)]);
  * ```
  */
 export function Step<S extends ZodType>(config: StepConfig<S>) {

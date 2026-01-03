@@ -490,10 +490,10 @@ describe("StepRegistry integration tests", () => {
       try {
         // Run the registry with our test steps
         await StepRegistry.run([
-          EchoStep,
-          ApprovalEchoStep,
-          DeployStep,
-          ApprovalDeployStep,
+          new EchoStep(),
+          new ApprovalEchoStep(),
+          new DeployStep(),
+          new ApprovalDeployStep(),
         ]);
 
         // Verify the output file was created
@@ -595,7 +595,7 @@ describe("StepRegistry integration tests", () => {
       ];
 
       try {
-        await StepRegistry.run([EchoStep]);
+        await StepRegistry.run([new EchoStep()]);
 
         // Verify the directory and file were created
         expect(fs.existsSync(NESTED_OUTPUT_PATH)).toBe(true);

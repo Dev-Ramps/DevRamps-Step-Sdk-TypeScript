@@ -3,7 +3,7 @@
 // =============================================================================
 
 // Base classes for creating steps
-export { BaseStep, StepClass, StepMetadata, StepKind } from "./base/base-step";
+export { BaseStep, StepMetadata, StepKind } from "./base/base-step";
 export { SimpleStep } from "./base/simple-step";
 export { PollingStep } from "./base/polling-step";
 

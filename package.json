@@ -1,6 +1,6 @@
 {
   "name": "@devramps/sdk-typescript",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "SDK for building custom deployment steps for DevRamps",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -10,6 +10,9 @@
     "LICENSE",
     "README.md"
   ],
+  "bin": {
+    "create-step-registry": "./scripts/create-step-registry.js"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",

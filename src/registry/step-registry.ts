@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import minimist from "minimist";
 import z from "zod";
-import type { BaseStep, StepClass, StepMetadata } from "../base/base-step";
+import type { BaseStep, StepMetadata } from "../base/base-step";
 import type { SimpleStep } from "../base/simple-step";
 import type { PollingStep } from "../base/polling-step";
 import { StepLogger } from "../logging/step-logger";
@@ -45,13 +45,13 @@ const DEFAULT_LOG_DIR = "/tmp/step-logs";
 // =============================================================================
 
 export class StepRegistry {
-  private steps: Map<string, StepClass>;
+  private steps: Map<string, BaseStep<unknown>>;
   private outputPath: string;
   private logDir: string;
   private executionId: string;
 
   private constructor(
-    steps: StepClass[],
+    steps: BaseStep<unknown>[],
     outputPath: string,
     logDir: string,
     executionId: string
@@ -61,10 +61,9 @@ export class StepRegistry {
     this.logDir = logDir;
     this.executionId = executionId;
 
-    for (const StepCls of steps) {
-      const instance = new StepCls();
+    for (const instance of steps) {
       const metadata = instance.getMetadata();
-      this.steps.set(metadata.stepType, StepCls);
+      this.steps.set(metadata.stepType, instance);
     }
   }
 
@@ -74,7 +73,10 @@ export class StepRegistry {
    *
    * Usage in user's entrypoint file:
    * ```
-   * StepRegistry.run([MyStep1, MyStep2, ...]);
+   * StepRegistry.run([
+   *   new MyStep1(dependency1, dependency2),
+   *   new MyStep2(config)
+   * ]);
    * ```
    *
    * CLI arguments:
@@ -83,7 +85,7 @@ export class StepRegistry {
    * - --log-dir: Directory for log files (default: /tmp/step-logs)
    * - --execution-id: Unique ID for this execution (required for logging)
    */
-  static async run(steps: StepClass[]): Promise<void> {
+  static async run(steps: BaseStep<unknown>[]): Promise<void> {
     const args = minimist(process.argv.slice(2));
     const outputPath = args["output"] || DEFAULT_OUTPUT_PATH;
     const logDir = args["log-dir"] || DEFAULT_LOG_DIR;
@@ -124,8 +126,7 @@ export class StepRegistry {
   private synthesizeMetadata(): StepMetadata[] {
     const metadata: StepMetadata[] = [];
 
-    for (const StepCls of this.steps.values()) {
-      const instance = new StepCls();
+    for (const instance of this.steps.values()) {
       metadata.push(instance.getMetadata());
     }
 
@@ -138,9 +139,9 @@ export class StepRegistry {
     approvalContext?: ApprovalContext,
     pollingState?: Record<string, unknown>
   ): Promise<void> {
-    const StepCls = this.steps.get(type);
+    const instance = this.steps.get(type);
 
-    if (!StepCls) {
+    if (!instance) {
       this.writeOutput(
         StepOutputs.failed(
           `No step registered with type: ${type}`,
@@ -151,7 +152,6 @@ export class StepRegistry {
     }
 
     try {
-      const instance = new StepCls();
       const metadata = instance.getMetadata();
 
       // Inject logger

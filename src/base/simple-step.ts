@@ -8,21 +8,35 @@ import type { ApprovalContext, RunOutput, StepOutput } from "../output/step-outp
  * Users extend this class and implement the `run` method.
  * Optionally override `prepare` to require approval before execution.
  *
+ * Steps can accept constructor parameters for dependency injection.
+ *
  * @example
  * ```typescript
  * @Step({ name: "Deploy", type: "deploy", schema: deploySchema })
  * class DeployStep extends SimpleStep<DeployParams> {
+ *   constructor(private deployService: DeployService) {
+ *     super();
+ *   }
+ *
  *   async run(params: DeployParams): Promise<RunOutput> {
  *     this.logger.info("Deploying", { target: params.target });
- *     return StepOutputs.success({ deploymentId: "123" });
+ *     const result = await this.deployService.deploy(params.target);
+ *     return StepOutputs.success({ deploymentId: result.id });
  *   }
  * }
+ *
+ * // Register with dependency injected
+ * StepRegistry.run([new DeployStep(deployService)]);
  * ```
  *
  * @example With approval
  * ```typescript
  * @Step({ name: "Delete User", type: "delete-user", schema: deleteUserSchema })
  * class DeleteUserStep extends SimpleStep<DeleteUserParams> {
+ *   constructor(private userService: UserService) {
+ *     super();
+ *   }
+ *
  *   async prepare(params: DeleteUserParams): Promise<PrepareOutput> {
  *     return StepOutputs.approvalRequired({
  *       message: `Delete user ${params.userId}?`,
@@ -31,6 +45,7 @@ import type { ApprovalContext, RunOutput, StepOutput } from "../output/step-outp
  *
  *   async run(params: DeleteUserParams, approval: ApprovalContext): Promise<RunOutput> {
  *     this.logger.info("Deleting user", { approvedBy: approval.approverId });
+ *     await this.userService.delete(params.userId);
  *     return StepOutputs.success();
  *   }
  * }

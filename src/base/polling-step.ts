@@ -16,6 +16,8 @@ import type {
  *
  * Optionally override `prepare` to require approval before triggering.
  *
+ * Steps can accept constructor parameters for dependency injection.
+ *
  * @typeParam TParams - The input parameters type (validated by schema)
  * @typeParam TPollingState - The polling state type passed between poll calls
  *
@@ -26,25 +28,36 @@ import type {
  *
  * @Step({ name: "Long Job", type: "long-job", schema: jobSchema })
  * class LongJobStep extends PollingStep<JobParams, JobPollingState> {
+ *   constructor(private jobService: JobService) {
+ *     super();
+ *   }
+ *
  *   async trigger(params: JobParams): Promise<TriggerOutput<JobPollingState>> {
- *     const jobId = await startJob(params);
+ *     const jobId = await this.jobService.start(params);
  *     return StepOutputs.triggered({ jobId, startedAt: Date.now() });
  *   }
  *
  *   async poll(params: JobParams, state: JobPollingState): Promise<PollOutput<JobPollingState>> {
- *     const status = await checkJob(state.jobId);
+ *     const status = await this.jobService.checkStatus(state.jobId);
  *     if (status === "running") {
  *       return StepOutputs.pollAgain(state, 5000);
  *     }
  *     return StepOutputs.success({ result: status });
  *   }
  * }
+ *
+ * // Register with dependency injected
+ * StepRegistry.run([new LongJobStep(jobService)]);
  * ```
  *
  * @example With approval
  * ```typescript
  * @Step({ name: "Dangerous Job", type: "dangerous-job", schema: dangerousSchema })
  * class DangerousJobStep extends PollingStep<DangerousParams, DangerousPollingState> {
+ *   constructor(private jobService: JobService) {
+ *     super();
+ *   }
+ *
  *   async prepare(params: DangerousParams): Promise<PrepareOutput> {
  *     return StepOutputs.approvalRequired({
  *       message: `Run dangerous job on ${params.target}?`,
@@ -52,12 +65,16 @@ import type {
  *   }
  *
  *   async trigger(params: DangerousParams, approval: ApprovalContext): Promise<TriggerOutput<DangerousPollingState>> {
- *     const jobId = await startDangerousJob(params);
+ *     const jobId = await this.jobService.startDangerous(params);
  *     return StepOutputs.triggered({ jobId });
  *   }
  *
  *   async poll(params: DangerousParams, state: DangerousPollingState): Promise<PollOutput<DangerousPollingState>> {
- *     // ... check status
+ *     const status = await this.jobService.checkStatus(state.jobId);
+ *     if (status === "running") {
+ *       return StepOutputs.pollAgain(state, 5000);
+ *     }
+ *     return StepOutputs.success();
  *   }
  * }
  * ```

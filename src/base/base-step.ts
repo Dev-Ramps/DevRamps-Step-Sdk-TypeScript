@@ -1,4 +1,4 @@
-import type { ZodType, z } from "zod";
+import type { ZodType } from "zod";
 import type { StepLogger } from "../logging/step-logger";
 import { NoOpLogger } from "../logging/step-logger";
 import type { PrepareOutput } from "../output/step-output";
@@ -60,12 +60,3 @@ export abstract class BaseStep<TParams = unknown> {
   }
 }
 
-/**
- * Type representing a class constructor that produces a BaseStep instance
- * with the getMetadata method available.
- */
-export type StepClass<S extends ZodType = ZodType> = new (
-  ...args: any[]
-) => BaseStep<z.infer<S>> & {
-  getMetadata(): StepMetadata<S>;
-};
