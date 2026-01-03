@@ -1,6 +1,5 @@
-import type { ZodType, z } from "zod";
-import type { StepKind, StepMetadata } from "../base/base-step";
-import { BaseStep } from "../base/base-step";
+import { ZodType, z } from "zod";
+import { BaseStep, StepKind, StepMetadata } from "../base/base-step";
 
 export interface StepConfig<S extends ZodType> {
   name: string;

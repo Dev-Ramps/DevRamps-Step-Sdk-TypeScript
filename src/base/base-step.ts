@@ -1,7 +1,7 @@
 import type { ZodType, z } from "zod";
-import type { StepLogger} from "../logging/step-logger";
+import type { StepLogger } from "../logging/step-logger";
 import { NoOpLogger } from "../logging/step-logger";
-import type { PrepareOutput} from "../output/step-output";
+import type { PrepareOutput } from "../output/step-output";
 import { StepOutputs } from "../output/step-output";
 
 export type StepKind = "simple" | "polling";
@@ -9,7 +9,7 @@ export type StepKind = "simple" | "polling";
 export interface StepMetadata<S extends ZodType = ZodType> {
   name: string;
   type: string;
-  schema: S;
+  schema: ZodType;
   stepKind: StepKind;
   requiresApproval: boolean;
 }
