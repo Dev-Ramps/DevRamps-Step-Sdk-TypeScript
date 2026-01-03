@@ -39,7 +39,7 @@ describe("SimpleStep", () => {
       const metadata = step.getMetadata();
 
       expect(metadata.name).toBe("Echo Step");
-      expect(metadata.type).toBe("echo");
+      expect(metadata.stepType).toBe("echo");
       expect(metadata.stepKind).toBe("simple");
       expect(metadata.requiresApproval).toBe(false);
     });

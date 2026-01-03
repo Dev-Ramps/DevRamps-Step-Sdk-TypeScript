@@ -1,17 +1,23 @@
 import type { ZodType, z } from "zod";
-import type { StepLogger} from "../logging/step-logger";
+import type { StepLogger } from "../logging/step-logger";
 import { NoOpLogger } from "../logging/step-logger";
-import type { PrepareOutput} from "../output/step-output";
+import type { PrepareOutput } from "../output/step-output";
 import { StepOutputs } from "../output/step-output";
+import type { ZodStandardJSONSchemaPayload } from "zod/v4/core";
 
 export type StepKind = "simple" | "polling";
 
 export interface StepMetadata<S extends ZodType = ZodType> {
-  name: string;
-  type: string;
+  name?: string;
+  shortDescription?: string;
+  longDescription?: string;
+  yamlExample?: string;
   schema: S;
   stepKind: StepKind;
   requiresApproval: boolean;
+  stepType: string;
+  jsonSchema: ZodStandardJSONSchemaPayload<S>;
+  documentationUrl?: string;
 }
 
 /**

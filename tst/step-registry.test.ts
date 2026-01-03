@@ -48,7 +48,10 @@ class ApprovalEchoStep extends SimpleStep<EchoParams> {
     });
   }
 
-  async run(params: EchoParams, approval?: ApprovalContext): Promise<RunOutput> {
+  async run(
+    params: EchoParams,
+    approval?: ApprovalContext
+  ): Promise<RunOutput> {
     return StepOutputs.success({
       echo: params.message,
       approvedBy: approval?.approverId,
@@ -58,25 +61,40 @@ class ApprovalEchoStep extends SimpleStep<EchoParams> {
 
 @Step({ name: "Deploy", type: "deploy", schema: DeploySchema })
 class DeployStep extends PollingStep<DeployParams, DeployPollingState> {
-  async trigger(params: DeployParams): Promise<TriggerOutput<DeployPollingState>> {
+  async trigger(
+    params: DeployParams
+  ): Promise<TriggerOutput<DeployPollingState>> {
     return StepOutputs.triggered({
       deploymentId: `deploy-${params.target}-${params.version}`,
       pollCount: 0,
     });
   }
 
-  async poll(_params: DeployParams, state: DeployPollingState): Promise<PollOutput<DeployPollingState>> {
+  async poll(
+    _params: DeployParams,
+    state: DeployPollingState
+  ): Promise<PollOutput<DeployPollingState>> {
     if (state.pollCount < 2) {
-      return StepOutputs.pollAgain({
-        ...state,
-        pollCount: state.pollCount + 1,
-      }, 1000);
+      return StepOutputs.pollAgain(
+        {
+          ...state,
+          pollCount: state.pollCount + 1,
+        },
+        1000
+      );
     }
-    return StepOutputs.success({ deploymentId: state.deploymentId, status: "complete" });
+    return StepOutputs.success({
+      deploymentId: state.deploymentId,
+      status: "complete",
+    });
   }
 }
 
-@Step({ name: "Approval Deploy", type: "approval-deploy", schema: DeploySchema })
+@Step({
+  name: "Approval Deploy",
+  type: "approval-deploy",
+  schema: DeploySchema,
+})
 class ApprovalDeployStep extends PollingStep<DeployParams, DeployPollingState> {
   override async prepare(params: DeployParams): Promise<PrepareOutput> {
     return StepOutputs.approvalRequired({
@@ -84,14 +102,20 @@ class ApprovalDeployStep extends PollingStep<DeployParams, DeployPollingState> {
     });
   }
 
-  async trigger(params: DeployParams, approval?: ApprovalContext): Promise<TriggerOutput<DeployPollingState>> {
+  async trigger(
+    params: DeployParams,
+    approval?: ApprovalContext
+  ): Promise<TriggerOutput<DeployPollingState>> {
     return StepOutputs.triggered({
       deploymentId: `deploy-${params.target}-approved-by-${approval?.approverId}`,
       pollCount: 0,
     });
   }
 
-  async poll(_params: DeployParams, state: DeployPollingState): Promise<PollOutput<DeployPollingState>> {
+  async poll(
+    _params: DeployParams,
+    state: DeployPollingState
+  ): Promise<PollOutput<DeployPollingState>> {
     return StepOutputs.success({ deploymentId: state.deploymentId });
   }
 }
@@ -209,9 +233,10 @@ describe("Step metadata extraction", () => {
     const metadata = step.getMetadata();
 
     expect(metadata.name).toBe("Echo");
-    expect(metadata.type).toBe("echo");
+    expect(metadata.stepType).toBe("echo");
     expect(metadata.stepKind).toBe("simple");
     expect(metadata.requiresApproval).toBe(false);
+    expect(metadata.jsonSchema).toBeDefined();
   });
 
   it("ApprovalEchoStep has correct metadata", () => {
@@ -219,7 +244,7 @@ describe("Step metadata extraction", () => {
     const metadata = step.getMetadata();
 
     expect(metadata.name).toBe("Approval Echo");
-    expect(metadata.type).toBe("approval-echo");
+    expect(metadata.stepType).toBe("approval-echo");
     expect(metadata.stepKind).toBe("simple");
     expect(metadata.requiresApproval).toBe(true);
   });
@@ -229,7 +254,7 @@ describe("Step metadata extraction", () => {
     const metadata = step.getMetadata();
 
     expect(metadata.name).toBe("Deploy");
-    expect(metadata.type).toBe("deploy");
+    expect(metadata.stepType).toBe("deploy");
     expect(metadata.stepKind).toBe("polling");
     expect(metadata.requiresApproval).toBe(false);
   });
@@ -239,9 +264,66 @@ describe("Step metadata extraction", () => {
     const metadata = step.getMetadata();
 
     expect(metadata.name).toBe("Approval Deploy");
-    expect(metadata.type).toBe("approval-deploy");
+    expect(metadata.stepType).toBe("approval-deploy");
     expect(metadata.stepKind).toBe("polling");
     expect(metadata.requiresApproval).toBe(true);
+  });
+
+  describe("metadata with optional fields", () => {
+    const TestSchema = z.object({ value: z.string() });
+
+    @Step({
+      name: "Documented Step",
+      type: "documented-step",
+      schema: TestSchema,
+      shortDescription: "Short description",
+      longDescription: "Long description with more details",
+      yamlExample: "type: documented-step\nparams:\n  value: test",
+    })
+    class DocumentedStep extends SimpleStep<z.infer<typeof TestSchema>> {
+      async run(): Promise<RunOutput> {
+        return StepOutputs.success();
+      }
+    }
+
+    it("includes all optional metadata fields", () => {
+      const step = new DocumentedStep();
+      const metadata = step.getMetadata();
+
+      expect(metadata.name).toBe("Documented Step");
+      expect(metadata.stepType).toBe("documented-step");
+      expect(metadata.shortDescription).toBe("Short description");
+      expect(metadata.longDescription).toBe(
+        "Long description with more details"
+      );
+      expect(metadata.yamlExample).toBe(
+        "type: documented-step\nparams:\n  value: test"
+      );
+      expect(metadata.jsonSchema).toBeDefined();
+      expect(metadata.jsonSchema.type).toBe("object");
+    });
+
+    @Step({
+      type: "minimal-step",
+      schema: TestSchema,
+    })
+    class MinimalStep extends SimpleStep<z.infer<typeof TestSchema>> {
+      async run(): Promise<RunOutput> {
+        return StepOutputs.success();
+      }
+    }
+
+    it("handles steps with minimal metadata", () => {
+      const step = new MinimalStep();
+      const metadata = step.getMetadata();
+
+      expect(metadata.name).toBeUndefined();
+      expect(metadata.stepType).toBe("minimal-step");
+      expect(metadata.shortDescription).toBeUndefined();
+      expect(metadata.longDescription).toBeUndefined();
+      expect(metadata.yamlExample).toBeUndefined();
+      expect(metadata.jsonSchema).toBeDefined(); // jsonSchema is always generated
+    });
   });
 });
 
@@ -263,7 +345,9 @@ describe("Step execution", () => {
 
       expect(result.status).toBe("APPROVAL_REQUIRED");
       if (result.status === "APPROVAL_REQUIRED") {
-        expect(result.approvalRequest.message).toBe("Approve echo: sensitive action");
+        expect(result.approvalRequest.message).toBe(
+          "Approve echo: sensitive action"
+        );
       }
     });
 
@@ -273,7 +357,10 @@ describe("Step execution", () => {
         approved: true,
         approverId: "admin-user",
       };
-      const result = await step.execute({ message: "approved action" }, approval);
+      const result = await step.execute(
+        { message: "approved action" },
+        approval
+      );
 
       expect(result.status).toBe("SUCCESS");
       if (result.status === "SUCCESS") {
@@ -341,7 +428,9 @@ describe("Step execution", () => {
 
       expect(result.status).toBe("APPROVAL_REQUIRED");
       if (result.status === "APPROVAL_REQUIRED") {
-        expect(result.approvalRequest.message).toBe("Approve deployment to production?");
+        expect(result.approvalRequest.message).toBe(
+          "Approve deployment to production?"
+        );
       }
     });
 
@@ -361,6 +450,163 @@ describe("Step execution", () => {
         expect(result.pollingState.deploymentId).toBe(
           "deploy-production-approved-by-release-manager"
         );
+      }
+    });
+  });
+});
+
+describe("StepRegistry integration tests", () => {
+  const TEST_OUTPUT_PATH = "/tmp/test-step-output.json";
+
+  beforeEach(() => {
+    // Clean up any existing output file
+    if (fs.existsSync(TEST_OUTPUT_PATH)) {
+      fs.unlinkSync(TEST_OUTPUT_PATH);
+    }
+  });
+
+  afterEach(() => {
+    // Clean up test output file
+    if (fs.existsSync(TEST_OUTPUT_PATH)) {
+      fs.unlinkSync(TEST_OUTPUT_PATH);
+    }
+  });
+
+  describe("SYNTHESIZE-METADATA job", () => {
+    it("writes metadata for all registered steps to output file", async () => {
+      const { StepRegistry } = await import("../src/registry/step-registry");
+
+      // Mock process.argv to simulate CLI input
+      const originalArgv = process.argv;
+      process.argv = [
+        "node",
+        "script.js",
+        "--input",
+        JSON.stringify({ job: "SYNTHESIZE-METADATA" }),
+        "--output",
+        TEST_OUTPUT_PATH,
+      ];
+
+      try {
+        // Run the registry with our test steps
+        await StepRegistry.run([
+          EchoStep,
+          ApprovalEchoStep,
+          DeployStep,
+          ApprovalDeployStep,
+        ]);
+
+        // Verify the output file was created
+        expect(fs.existsSync(TEST_OUTPUT_PATH)).toBe(true);
+
+        // Read and parse the output
+        const outputContent = fs.readFileSync(TEST_OUTPUT_PATH, "utf-8");
+        const output = JSON.parse(outputContent);
+
+        // Validate top-level structure
+        expect(output).toEqual({
+          status: "SUCCESS",
+          data: {
+            metadata: expect.any(Array),
+          },
+        });
+
+        // Validate metadata array
+        const metadata = output.data.metadata;
+        expect(metadata).toHaveLength(4);
+
+        // Validate EchoStep metadata
+        const echoMeta = metadata.find((m: any) => m.stepType === "echo");
+        expect(echoMeta).toMatchObject({
+          name: "Echo",
+          stepType: "echo",
+          stepKind: "simple",
+          requiresApproval: false,
+          jsonSchema: expect.objectContaining({
+            type: "object",
+            properties: expect.objectContaining({
+              message: expect.any(Object),
+            }),
+            required: ["message"],
+          }),
+        });
+
+        // Validate ApprovalEchoStep metadata
+        const approvalEchoMeta = metadata.find(
+          (m: any) => m.stepType === "approval-echo"
+        );
+        expect(approvalEchoMeta).toMatchObject({
+          name: "Approval Echo",
+          stepType: "approval-echo",
+          stepKind: "simple",
+          requiresApproval: true,
+        });
+
+        // Validate DeployStep metadata
+        const deployMeta = metadata.find((m: any) => m.stepType === "deploy");
+        expect(deployMeta).toMatchObject({
+          name: "Deploy",
+          stepType: "deploy",
+          stepKind: "polling",
+          requiresApproval: false,
+          jsonSchema: expect.objectContaining({
+            type: "object",
+            properties: expect.objectContaining({
+              target: expect.any(Object),
+              version: expect.any(Object),
+            }),
+            required: ["target", "version"],
+          }),
+        });
+
+        // Validate ApprovalDeployStep metadata
+        const approvalDeployMeta = metadata.find(
+          (m: any) => m.stepType === "approval-deploy"
+        );
+        expect(approvalDeployMeta).toMatchObject({
+          name: "Approval Deploy",
+          stepType: "approval-deploy",
+          stepKind: "polling",
+          requiresApproval: true,
+        });
+      } finally {
+        process.argv = originalArgv;
+      }
+    });
+
+    it("creates output directory if it doesn't exist", async () => {
+      const { StepRegistry } = await import("../src/registry/step-registry");
+      const NESTED_OUTPUT_PATH = "/tmp/test-nested/step-output.json";
+
+      // Ensure the directory doesn't exist
+      const dir = "/tmp/test-nested";
+      if (fs.existsSync(dir)) {
+        fs.rmSync(dir, { recursive: true });
+      }
+
+      const originalArgv = process.argv;
+      process.argv = [
+        "node",
+        "script.js",
+        "--input",
+        JSON.stringify({ job: "SYNTHESIZE-METADATA" }),
+        "--output",
+        NESTED_OUTPUT_PATH,
+      ];
+
+      try {
+        await StepRegistry.run([EchoStep]);
+
+        // Verify the directory and file were created
+        expect(fs.existsSync(NESTED_OUTPUT_PATH)).toBe(true);
+
+        const output = JSON.parse(fs.readFileSync(NESTED_OUTPUT_PATH, "utf-8"));
+        expect(output.status).toBe("SUCCESS");
+      } finally {
+        process.argv = originalArgv;
+        if (fs.existsSync(dir)) {
+          fs.rmSync(dir, { recursive: true });
+        }
       }
     });
   });

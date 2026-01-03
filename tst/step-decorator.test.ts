@@ -33,7 +33,7 @@ describe("@Step decorator", () => {
 
       expect(metadata).toBeDefined();
       expect(metadata.name).toBe("Simple Test");
-      expect(metadata.type).toBe("simple-test");
+      expect(metadata.stepType).toBe("simple-test");
       expect(metadata.schema).toBe(TestSchema);
     });
 
@@ -94,7 +94,7 @@ describe("@Step decorator", () => {
 
       expect(metadata).toBeDefined();
       expect(metadata.name).toBe("Polling Test");
-      expect(metadata.type).toBe("polling-test");
+      expect(metadata.stepType).toBe("polling-test");
     });
 
     it("detects stepKind as polling", () => {
@@ -176,6 +176,70 @@ describe("@Step decorator", () => {
         count: -1,
       });
       expect(invalidResult.success).toBe(false);
+    });
+  });
+
+  describe("optional metadata fields", () => {
+    @Step({
+      name: "Fully Documented Step",
+      type: "fully-documented",
+      schema: TestSchema,
+      shortDescription: "A short description of the step",
+      longDescription: "This is a much longer description that provides detailed information about what this step does and how to use it.",
+      yamlExample: "type: fully-documented\nparams:\n  value: example",
+    })
+    class FullyDocumentedStep extends SimpleStep<TestParams> {
+      async run(params: TestParams): Promise<RunOutput> {
+        return StepOutputs.success({ value: params.value });
+      }
+    }
+
+    it("includes all optional metadata fields when provided", () => {
+      const step = new FullyDocumentedStep();
+      const metadata = step.getMetadata();
+
+      expect(metadata.name).toBe("Fully Documented Step");
+      expect(metadata.stepType).toBe("fully-documented");
+      expect(metadata.shortDescription).toBe("A short description of the step");
+      expect(metadata.longDescription).toBe(
+        "This is a much longer description that provides detailed information about what this step does and how to use it."
+      );
+      expect(metadata.yamlExample).toBe(
+        "type: fully-documented\nparams:\n  value: example"
+      );
+    });
+
+    it("generates JSON schema from Zod schema", () => {
+      const step = new FullyDocumentedStep();
+      const metadata = step.getMetadata();
+
+      expect(metadata.jsonSchema).toBeDefined();
+      expect(metadata.jsonSchema.type).toBe("object");
+      expect(metadata.jsonSchema.properties).toBeDefined();
+      // Verify the schema contains the 'value' property from TestSchema
+      expect(metadata.jsonSchema.properties?.value).toBeDefined();
+    });
+
+    @Step({
+      type: "minimal-step",
+      schema: TestSchema,
+    })
+    class MinimalStep extends SimpleStep<TestParams> {
+      async run(params: TestParams): Promise<RunOutput> {
+        return StepOutputs.success({ value: params.value });
+      }
+    }
+
+    it("handles missing optional fields gracefully", () => {
+      const step = new MinimalStep();
+      const metadata = step.getMetadata();
+
+      expect(metadata.name).toBeUndefined();
+      expect(metadata.stepType).toBe("minimal-step");
+      expect(metadata.shortDescription).toBeUndefined();
+      expect(metadata.longDescription).toBeUndefined();
+      expect(metadata.yamlExample).toBeUndefined();
+      expect(metadata.jsonSchema).toBeDefined(); // jsonSchema should always be present
     });
   });
 

@@ -67,7 +67,7 @@ describe("PollingStep", () => {
       const metadata = step.getMetadata();
 
       expect(metadata.name).toBe("Job Step");
-      expect(metadata.type).toBe("job");
+      expect(metadata.stepType).toBe("job");
       expect(metadata.stepKind).toBe("polling");
       expect(metadata.requiresApproval).toBe(false);
     });

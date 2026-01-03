@@ -1,10 +1,13 @@
-import type { ZodType, z } from "zod";
+import { type ZodType, z } from "zod";
 import type { StepKind, StepMetadata } from "../base/base-step";
 import { BaseStep } from "../base/base-step";
 
 export interface StepConfig<S extends ZodType> {
-  name: string;
+  name?: string;
   type: string;
+  shortDescription?: string;
+  longDescription?: string;
+  yamlExample?: string;
   schema: S;
 }
 
@@ -43,9 +46,13 @@ export function Step<S extends ZodType>(config: StepConfig<S>) {
         const requiresApproval = this.prepare !== BaseStep.prototype.prepare;
 
         return {
-          type: config.type,
           name: config.name,
+          stepType: config.type,
+          shortDescription: config.shortDescription,
+          longDescription: config.longDescription,
+          yamlExample: config.yamlExample,
           schema: config.schema,
+          jsonSchema: z.toJSONSchema(config.schema),
           stepKind,
           requiresApproval,
         };

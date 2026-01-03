@@ -6,13 +6,8 @@ import type { BaseStep, StepClass, StepMetadata } from "../base/base-step";
 import type { SimpleStep } from "../base/simple-step";
 import type { PollingStep } from "../base/polling-step";
 import { StepLogger } from "../logging/step-logger";
-import type {
-  ApprovalContext,
-  StepOutput} from "../output/step-output";
-import {
-  ApprovalContextSchema,
-  StepOutputs,
-} from "../output/step-output";
+import type { ApprovalContext, StepOutput } from "../output/step-output";
+import { ApprovalContextSchema, StepOutputs } from "../output/step-output";
 
 // =============================================================================
 // Input Schemas
@@ -69,7 +64,7 @@ export class StepRegistry {
     for (const StepCls of steps) {
       const instance = new StepCls();
       const metadata = instance.getMetadata();
-      this.steps.set(metadata.type, StepCls);
+      this.steps.set(metadata.stepType, StepCls);
     }
   }
 
@@ -147,7 +142,10 @@ export class StepRegistry {
 
     if (!StepCls) {
       this.writeOutput(
-        StepOutputs.failed(`No step registered with type: ${type}`, "STEP_NOT_FOUND")
+        StepOutputs.failed(
+          `No step registered with type: ${type}`,
+          "STEP_NOT_FOUND"
+        )
       );
       return;
     }
@@ -160,7 +158,7 @@ export class StepRegistry {
       const logger = new StepLogger({
         logDir: this.logDir,
         executionId: this.executionId,
-        stepType: metadata.type,
+        stepType: metadata.stepType,
       });
       instance._setLogger(logger);
 
