@@ -234,9 +234,7 @@ describe("Step metadata extraction", () => {
 
     expect(metadata.name).toBe("Echo");
     expect(metadata.stepType).toBe("echo");
-    expect(metadata.stepKind).toBe("simple");
-    expect(metadata.requiresApproval).toBe(false);
-    expect(metadata.jsonSchema).toBeDefined();
+    expect(metadata.paramsJsonSchema).toBeDefined();
   });
 
   it("ApprovalEchoStep has correct metadata", () => {
@@ -245,8 +243,6 @@ describe("Step metadata extraction", () => {
 
     expect(metadata.name).toBe("Approval Echo");
     expect(metadata.stepType).toBe("approval-echo");
-    expect(metadata.stepKind).toBe("simple");
-    expect(metadata.requiresApproval).toBe(true);
   });
 
   it("DeployStep has correct metadata", () => {
@@ -255,8 +251,6 @@ describe("Step metadata extraction", () => {
 
     expect(metadata.name).toBe("Deploy");
     expect(metadata.stepType).toBe("deploy");
-    expect(metadata.stepKind).toBe("polling");
-    expect(metadata.requiresApproval).toBe(false);
   });
 
   it("ApprovalDeployStep has correct metadata", () => {
@@ -265,8 +259,6 @@ describe("Step metadata extraction", () => {
 
     expect(metadata.name).toBe("Approval Deploy");
     expect(metadata.stepType).toBe("approval-deploy");
-    expect(metadata.stepKind).toBe("polling");
-    expect(metadata.requiresApproval).toBe(true);
   });
 
   describe("metadata with optional fields", () => {
@@ -299,8 +291,8 @@ describe("Step metadata extraction", () => {
       expect(metadata.yamlExample).toBe(
         "type: documented-step\nparams:\n  value: test"
       );
-      expect(metadata.jsonSchema).toBeDefined();
-      expect(metadata.jsonSchema.type).toBe("object");
+      expect(metadata.paramsJsonSchema).toBeDefined();
+      expect(metadata.paramsJsonSchema.type).toBe("object");
     });
 
     @Step({
@@ -322,7 +314,7 @@ describe("Step metadata extraction", () => {
       expect(metadata.shortDescription).toBeUndefined();
       expect(metadata.longDescription).toBeUndefined();
       expect(metadata.yamlExample).toBeUndefined();
-      expect(metadata.jsonSchema).toBeDefined(); // jsonSchema is always generated
+      expect(metadata.paramsJsonSchema).toBeDefined(); // jsonSchema is always generated
     });
   });
 });
@@ -520,9 +512,7 @@ describe("StepRegistry integration tests", () => {
         expect(echoMeta).toMatchObject({
           name: "Echo",
           stepType: "echo",
-          stepKind: "simple",
-          requiresApproval: false,
-          jsonSchema: expect.objectContaining({
+          paramsJsonSchema: expect.objectContaining({
             type: "object",
             properties: expect.objectContaining({
               message: expect.any(Object),
@@ -538,8 +528,6 @@ describe("StepRegistry integration tests", () => {
         expect(approvalEchoMeta).toMatchObject({
           name: "Approval Echo",
           stepType: "approval-echo",
-          stepKind: "simple",
-          requiresApproval: true,
         });
 
         // Validate DeployStep metadata
@@ -547,9 +535,7 @@ describe("StepRegistry integration tests", () => {
         expect(deployMeta).toMatchObject({
           name: "Deploy",
           stepType: "deploy",
-          stepKind: "polling",
-          requiresApproval: false,
-          jsonSchema: expect.objectContaining({
+          paramsJsonSchema: expect.objectContaining({
             type: "object",
             properties: expect.objectContaining({
               target: expect.any(Object),
@@ -566,8 +552,6 @@ describe("StepRegistry integration tests", () => {
         expect(approvalDeployMeta).toMatchObject({
           name: "Approval Deploy",
           stepType: "approval-deploy",
-          stepKind: "polling",
-          requiresApproval: true,
         });
       } finally {
         process.argv = originalArgv;

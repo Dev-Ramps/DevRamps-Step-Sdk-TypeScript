@@ -2,7 +2,12 @@ import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { SimpleStep } from "../src/base/simple-step";
 import { Step } from "../src/decorators/step";
-import { StepOutputs, type RunOutput, type PrepareOutput, type ApprovalContext } from "../src/output/step-output";
+import {
+  StepOutputs,
+  type RunOutput,
+  type PrepareOutput,
+  type ApprovalContext,
+} from "../src/output/step-output";
 
 const TestParamsSchema = z.object({
   message: z.string(),
@@ -34,14 +39,21 @@ describe("SimpleStep", () => {
       }
     }
 
+    it("returns correct data", () => {
+      const step = new EchoStep();
+      const metadata = step.getData();
+
+      expect(metadata.stepType).toBe("echo");
+      expect(metadata.stepKind).toBe("simple");
+      expect(metadata.requiresApproval).toBe(false);
+    });
+
     it("returns correct metadata", () => {
       const step = new EchoStep();
       const metadata = step.getMetadata();
 
       expect(metadata.name).toBe("Echo Step");
       expect(metadata.stepType).toBe("echo");
-      expect(metadata.stepKind).toBe("simple");
-      expect(metadata.requiresApproval).toBe(false);
     });
 
     it("executes run method correctly", async () => {
@@ -64,7 +76,10 @@ describe("SimpleStep", () => {
         });
       }
 
-      async run(params: TestParams, approval?: ApprovalContext): Promise<RunOutput> {
+      async run(
+        params: TestParams,
+        approval?: ApprovalContext
+      ): Promise<RunOutput> {
         if (approval) {
           return StepOutputs.success({
             message: params.message,
@@ -77,9 +92,9 @@ describe("SimpleStep", () => {
 
     it("detects requiresApproval when prepare is overridden", () => {
       const step = new ApprovalStep();
-      const metadata = step.getMetadata();
+      const data = step.getData();
 
-      expect(metadata.requiresApproval).toBe(true);
+      expect(data.requiresApproval).toBe(true);
     });
 
     it("returns approval required from prepare", async () => {
@@ -88,7 +103,9 @@ describe("SimpleStep", () => {
 
       expect(result.status).toBe("APPROVAL_REQUIRED");
       if (result.status === "APPROVAL_REQUIRED") {
-        expect(result.approvalRequest.message).toBe("Please approve: test action");
+        expect(result.approvalRequest.message).toBe(
+          "Please approve: test action"
+        );
       }
     });
 
@@ -99,7 +116,10 @@ describe("SimpleStep", () => {
         approverId: "user-123",
       };
 
-      const result = await step.execute({ message: "approved action" }, approval);
+      const result = await step.execute(
+        { message: "approved action" },
+        approval
+      );
 
       expect(result.status).toBe("SUCCESS");
       if (result.status === "SUCCESS") {

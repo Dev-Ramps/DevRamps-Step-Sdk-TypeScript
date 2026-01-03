@@ -7,16 +7,20 @@ import type { ZodStandardJSONSchemaPayload } from "zod/v4/core";
 
 export type StepKind = "simple" | "polling";
 
+export interface StepData<S extends ZodType = ZodType> {
+  schema: S;
+  stepType: string;
+  stepKind: StepKind;
+  requiresApproval: boolean;
+}
+
 export interface StepMetadata<S extends ZodType = ZodType> {
   name?: string;
   shortDescription?: string;
   longDescription?: string;
   yamlExample?: string;
-  schema: S;
-  stepKind: StepKind;
-  requiresApproval: boolean;
   stepType: string;
-  jsonSchema: ZodStandardJSONSchemaPayload<S>;
+  paramsJsonSchema: ZodStandardJSONSchemaPayload<S>;
   documentationUrl?: string;
 }
 
@@ -45,6 +49,12 @@ export abstract class BaseStep<TParams = unknown> {
     );
   }
 
+  getData(): StepData {
+    throw new Error(
+      "getData not implemented. Did you forget to add the @Step decorator?"
+    );
+  }
+
   /**
    * Optional prepare method for approval flow.
    * Override this to require approval before execution.
@@ -59,4 +69,3 @@ export abstract class BaseStep<TParams = unknown> {
     );
   }
 }
-

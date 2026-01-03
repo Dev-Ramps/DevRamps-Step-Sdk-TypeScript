@@ -27,6 +27,15 @@ describe("@Step decorator", () => {
       }
     }
 
+    it("adds getData method", () => {
+      const step = new SimpleTestStep();
+      const metadata = step.getData();
+
+      expect(metadata).toBeDefined();
+      expect(metadata.stepType).toBe("simple-test");
+      expect(metadata.schema).toBe(TestSchema);
+    });
+
     it("adds getMetadata method", () => {
       const step = new SimpleTestStep();
       const metadata = step.getMetadata();
@@ -34,21 +43,20 @@ describe("@Step decorator", () => {
       expect(metadata).toBeDefined();
       expect(metadata.name).toBe("Simple Test");
       expect(metadata.stepType).toBe("simple-test");
-      expect(metadata.schema).toBe(TestSchema);
     });
 
     it("detects stepKind as simple", () => {
       const step = new SimpleTestStep();
-      const metadata = step.getMetadata();
+      const data = step.getData();
 
-      expect(metadata.stepKind).toBe("simple");
+      expect(data.stepKind).toBe("simple");
     });
 
     it("detects requiresApproval as false when prepare is not overridden", () => {
       const step = new SimpleTestStep();
-      const metadata = step.getMetadata();
+      const data = step.getData();
 
-      expect(metadata.requiresApproval).toBe(false);
+      expect(data.requiresApproval).toBe(false);
     });
   });
 
@@ -68,9 +76,9 @@ describe("@Step decorator", () => {
 
     it("detects requiresApproval as true when prepare is overridden", () => {
       const step = new ApprovalTestStep();
-      const metadata = step.getMetadata();
+      const data = step.getData();
 
-      expect(metadata.requiresApproval).toBe(true);
+      expect(data.requiresApproval).toBe(true);
     });
   });
 
@@ -83,7 +91,10 @@ describe("@Step decorator", () => {
         return StepOutputs.triggered({ jobId: params.value });
       }
 
-      async poll(_params: TestParams, state: PollingState): Promise<PollOutput<PollingState>> {
+      async poll(
+        _params: TestParams,
+        state: PollingState
+      ): Promise<PollOutput<PollingState>> {
         return StepOutputs.success({ jobId: state.jobId });
       }
     }
@@ -99,24 +110,31 @@ describe("@Step decorator", () => {
 
     it("detects stepKind as polling", () => {
       const step = new PollingTestStep();
-      const metadata = step.getMetadata();
+      const data = step.getData();
 
-      expect(metadata.stepKind).toBe("polling");
+      expect(data.stepKind).toBe("polling");
     });
 
     it("detects requiresApproval as false when prepare is not overridden", () => {
       const step = new PollingTestStep();
-      const metadata = step.getMetadata();
+      const data = step.getData();
 
-      expect(metadata.requiresApproval).toBe(false);
+      expect(data.requiresApproval).toBe(false);
     });
   });
 
   describe("with PollingStep requiring approval", () => {
     type PollingState = { jobId: string };
 
-    @Step({ name: "Approval Polling Test", type: "approval-polling-test", schema: TestSchema })
-    class ApprovalPollingTestStep extends PollingStep<TestParams, PollingState> {
+    @Step({
+      name: "Approval Polling Test",
+      type: "approval-polling-test",
+      schema: TestSchema,
+    })
+    class ApprovalPollingTestStep extends PollingStep<
+      TestParams,
+      PollingState
+    > {
       override async prepare(params: TestParams): Promise<PrepareOutput> {
         return StepOutputs.approvalRequired({
           message: `Approve polling for ${params.value}?`,
@@ -127,16 +145,19 @@ describe("@Step decorator", () => {
         return StepOutputs.triggered({ jobId: params.value });
       }
 
-      async poll(_params: TestParams, state: PollingState): Promise<PollOutput<PollingState>> {
+      async poll(
+        _params: TestParams,
+        state: PollingState
+      ): Promise<PollOutput<PollingState>> {
         return StepOutputs.success({ jobId: state.jobId });
       }
     }
 
     it("detects requiresApproval as true when prepare is overridden", () => {
       const step = new ApprovalPollingTestStep();
-      const metadata = step.getMetadata();
+      const data = step.getData();
 
-      expect(metadata.requiresApproval).toBe(true);
+      expect(data.requiresApproval).toBe(true);
     });
   });
 
@@ -147,7 +168,11 @@ describe("@Step decorator", () => {
       tags: z.array(z.string()).optional(),
     });
 
-    @Step({ name: "Complex Schema", type: "complex-schema", schema: ComplexSchema })
+    @Step({
+      name: "Complex Schema",
+      type: "complex-schema",
+      schema: ComplexSchema,
+    })
     class ComplexSchemaStep extends SimpleStep<z.infer<typeof ComplexSchema>> {
       async run(params: z.infer<typeof ComplexSchema>): Promise<RunOutput> {
         return StepOutputs.success({ processed: params.name });
@@ -156,22 +181,22 @@ describe("@Step decorator", () => {
 
     it("includes schema in metadata", () => {
       const step = new ComplexSchemaStep();
-      const metadata = step.getMetadata();
+      const data = step.getData();
 
-      expect(metadata.schema).toBe(ComplexSchema);
+      expect(data.schema).toBe(ComplexSchema);
     });
 
     it("schema can be used for validation", () => {
       const step = new ComplexSchemaStep();
-      const metadata = step.getMetadata();
+      const data = step.getData();
 
-      const validResult = metadata.schema.safeParse({
+      const validResult = data.schema.safeParse({
         name: "test",
         count: 5,
       });
       expect(validResult.success).toBe(true);
 
-      const invalidResult = metadata.schema.safeParse({
+      const invalidResult = data.schema.safeParse({
         name: "",
         count: -1,
       });
@@ -185,7 +210,8 @@ describe("@Step decorator", () => {
       type: "fully-documented",
       schema: TestSchema,
       shortDescription: "A short description of the step",
-      longDescription: "This is a much longer description that provides detailed information about what this step does and how to use it.",
+      longDescription:
+        "This is a much longer description that provides detailed information about what this step does and how to use it.",
       yamlExample: "type: fully-documented\nparams:\n  value: example",
     })
     class FullyDocumentedStep extends SimpleStep<TestParams> {
@@ -213,11 +239,11 @@ describe("@Step decorator", () => {
       const step = new FullyDocumentedStep();
       const metadata = step.getMetadata();
 
-      expect(metadata.jsonSchema).toBeDefined();
-      expect(metadata.jsonSchema.type).toBe("object");
-      expect(metadata.jsonSchema.properties).toBeDefined();
+      expect(metadata.paramsJsonSchema).toBeDefined();
+      expect(metadata.paramsJsonSchema.type).toBe("object");
+      expect(metadata.paramsJsonSchema.properties).toBeDefined();
       // Verify the schema contains the 'value' property from TestSchema
-      expect(metadata.jsonSchema.properties?.value).toBeDefined();
+      expect(metadata.paramsJsonSchema.properties?.value).toBeDefined();
     });
 
     @Step({
@@ -239,13 +265,17 @@ describe("@Step decorator", () => {
       expect(metadata.shortDescription).toBeUndefined();
       expect(metadata.longDescription).toBeUndefined();
       expect(metadata.yamlExample).toBeUndefined();
-      expect(metadata.jsonSchema).toBeDefined(); // jsonSchema should always be present
+      expect(metadata.paramsJsonSchema).toBeDefined(); // jsonSchema should always be present
     });
   });
 
   describe("class inheritance", () => {
     it("decorated class is still instanceof SimpleStep", () => {
-      @Step({ name: "Instance Test", type: "instance-test", schema: TestSchema })
+      @Step({
+        name: "Instance Test",
+        type: "instance-test",
+        schema: TestSchema,
+      })
       class InstanceTestStep extends SimpleStep<TestParams> {
         async run(): Promise<RunOutput> {
           return StepOutputs.success();
@@ -260,13 +290,23 @@ describe("@Step decorator", () => {
     it("decorated class is still instanceof PollingStep", () => {
       type PollingState = { id: string };
 
-      @Step({ name: "Polling Instance Test", type: "polling-instance-test", schema: TestSchema })
-      class PollingInstanceTestStep extends PollingStep<TestParams, PollingState> {
+      @Step({
+        name: "Polling Instance Test",
+        type: "polling-instance-test",
+        schema: TestSchema,
+      })
+      class PollingInstanceTestStep extends PollingStep<
+        TestParams,
+        PollingState
+      > {
         async trigger(): Promise<TriggerOutput<PollingState>> {
           return StepOutputs.triggered({ id: "123" });
         }
 
-        async poll(_params: TestParams, state: PollingState): Promise<PollOutput<PollingState>> {
+        async poll(
+          _params: TestParams,
+          state: PollingState
+        ): Promise<PollOutput<PollingState>> {
           return StepOutputs.success({ id: state.id });
         }
       }

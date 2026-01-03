@@ -23,10 +23,10 @@ describe("JSON Schema Generation", () => {
       const step = new SimpleTypesStep();
       const metadata = step.getMetadata();
 
-      expect(metadata.jsonSchema.type).toBe("object");
-      expect(metadata.jsonSchema.properties?.name).toBeDefined();
-      expect(metadata.jsonSchema.properties?.age).toBeDefined();
-      expect(metadata.jsonSchema.properties?.active).toBeDefined();
+      expect(metadata.paramsJsonSchema.type).toBe("object");
+      expect(metadata.paramsJsonSchema.properties?.name).toBeDefined();
+      expect(metadata.paramsJsonSchema.properties?.age).toBeDefined();
+      expect(metadata.paramsJsonSchema.properties?.active).toBeDefined();
     });
   });
 
@@ -51,13 +51,13 @@ describe("JSON Schema Generation", () => {
       const step = new ComplexTypesStep();
       const metadata = step.getMetadata();
 
-      expect(metadata.jsonSchema.type).toBe("object");
-      expect(metadata.jsonSchema.properties?.id).toBeDefined();
-      expect(metadata.jsonSchema.properties?.email).toBeDefined();
-      expect(metadata.jsonSchema.properties?.count).toBeDefined();
-      expect(metadata.jsonSchema.properties?.tags).toBeDefined();
-      expect(metadata.jsonSchema.properties?.metadata).toBeDefined();
-      expect(metadata.jsonSchema.properties?.status).toBeDefined();
+      expect(metadata.paramsJsonSchema.type).toBe("object");
+      expect(metadata.paramsJsonSchema.properties?.id).toBeDefined();
+      expect(metadata.paramsJsonSchema.properties?.email).toBeDefined();
+      expect(metadata.paramsJsonSchema.properties?.count).toBeDefined();
+      expect(metadata.paramsJsonSchema.properties?.tags).toBeDefined();
+      expect(metadata.paramsJsonSchema.properties?.metadata).toBeDefined();
+      expect(metadata.paramsJsonSchema.properties?.status).toBeDefined();
     });
 
     it("includes required fields in JSON schema", () => {
@@ -65,12 +65,12 @@ describe("JSON Schema Generation", () => {
       const metadata = step.getMetadata();
 
       // metadata is optional, so it should not be in required array
-      expect(metadata.jsonSchema.required).toBeDefined();
-      expect(metadata.jsonSchema.required).toContain("id");
-      expect(metadata.jsonSchema.required).toContain("email");
-      expect(metadata.jsonSchema.required).toContain("count");
-      expect(metadata.jsonSchema.required).toContain("tags");
-      expect(metadata.jsonSchema.required).toContain("status");
+      expect(metadata.paramsJsonSchema.required).toBeDefined();
+      expect(metadata.paramsJsonSchema.required).toContain("id");
+      expect(metadata.paramsJsonSchema.required).toContain("email");
+      expect(metadata.paramsJsonSchema.required).toContain("count");
+      expect(metadata.paramsJsonSchema.required).toContain("tags");
+      expect(metadata.paramsJsonSchema.required).toContain("status");
     });
   });
 
@@ -99,22 +99,28 @@ describe("JSON Schema Generation", () => {
       const step = new NestedTypesStep();
       const metadata = step.getMetadata();
 
-      expect(metadata.jsonSchema.type).toBe("object");
-      expect(metadata.jsonSchema.properties?.address).toBeDefined();
-      expect(metadata.jsonSchema.properties?.alternateAddresses).toBeDefined();
+      expect(metadata.paramsJsonSchema.type).toBe("object");
+      expect(metadata.paramsJsonSchema.properties?.address).toBeDefined();
+      expect(
+        metadata.paramsJsonSchema.properties?.alternateAddresses
+      ).toBeDefined();
     });
   });
 
   describe("union and discriminated union types", () => {
-    const UnionSchema = z.object({
-      type: z.literal("webhook"),
-      url: z.string().url(),
-      method: z.enum(["GET", "POST", "PUT", "DELETE"]),
-    }).or(z.object({
-      type: z.literal("email"),
-      recipient: z.string().email(),
-      subject: z.string(),
-    }));
+    const UnionSchema = z
+      .object({
+        type: z.literal("webhook"),
+        url: z.string().url(),
+        method: z.enum(["GET", "POST", "PUT", "DELETE"]),
+      })
+      .or(
+        z.object({
+          type: z.literal("email"),
+          recipient: z.string().email(),
+          subject: z.string(),
+        })
+      );
 
     @Step({ type: "union-types", schema: UnionSchema })
     class UnionTypesStep extends SimpleStep<z.infer<typeof UnionSchema>> {
@@ -127,7 +133,7 @@ describe("JSON Schema Generation", () => {
       const step = new UnionTypesStep();
       const metadata = step.getMetadata();
 
-      expect(metadata.jsonSchema).toBeDefined();
+      expect(metadata.paramsJsonSchema).toBeDefined();
       // Union types are represented as oneOf or anyOf in JSON Schema
     });
   });
@@ -136,11 +142,16 @@ describe("JSON Schema Generation", () => {
     const DescribedSchema = z.object({
       name: z.string().describe("The name of the resource"),
       count: z.number().default(10).describe("Number of items to process"),
-      enabled: z.boolean().default(true).describe("Whether the feature is enabled"),
+      enabled: z
+        .boolean()
+        .default(true)
+        .describe("Whether the feature is enabled"),
     });
 
     @Step({ type: "described-types", schema: DescribedSchema })
-    class DescribedTypesStep extends SimpleStep<z.infer<typeof DescribedSchema>> {
+    class DescribedTypesStep extends SimpleStep<
+      z.infer<typeof DescribedSchema>
+    > {
       async run(): Promise<RunOutput> {
         return StepOutputs.success();
       }
@@ -150,10 +161,10 @@ describe("JSON Schema Generation", () => {
       const step = new DescribedTypesStep();
       const metadata = step.getMetadata();
 
-      expect(metadata.jsonSchema.type).toBe("object");
-      expect(metadata.jsonSchema.properties?.name).toBeDefined();
-      expect(metadata.jsonSchema.properties?.count).toBeDefined();
-      expect(metadata.jsonSchema.properties?.enabled).toBeDefined();
+      expect(metadata.paramsJsonSchema.type).toBe("object");
+      expect(metadata.paramsJsonSchema.properties?.name).toBeDefined();
+      expect(metadata.paramsJsonSchema.properties?.count).toBeDefined();
+      expect(metadata.paramsJsonSchema.properties?.enabled).toBeDefined();
     });
   });
 });

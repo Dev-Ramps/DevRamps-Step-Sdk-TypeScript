@@ -1,8 +1,8 @@
 import { type ZodType, z } from "zod";
-import type { StepKind, StepMetadata } from "../base/base-step";
+import type { StepData, StepKind, StepMetadata } from "../base/base-step";
 import { BaseStep } from "../base/base-step";
 
-export interface StepConfig<S extends ZodType> {
+export interface StepConfig<S extends ZodType = ZodType> {
   name?: string;
   type: string;
   shortDescription?: string;
@@ -41,6 +41,17 @@ export function Step<S extends ZodType>(config: StepConfig<S>) {
   ): T {
     const Enhanced = class extends Base {
       override getMetadata(): StepMetadata<S> {
+        return {
+          name: config.name,
+          stepType: config.type,
+          shortDescription: config.shortDescription,
+          longDescription: config.longDescription,
+          yamlExample: config.yamlExample,
+          paramsJsonSchema: z.toJSONSchema(config.schema),
+        };
+      }
+
+      override getData(): StepData<S> {
         // Detect step kind by checking for PollingStep methods
         const hasPollingMethods =
           "trigger" in this &&
@@ -54,13 +65,8 @@ export function Step<S extends ZodType>(config: StepConfig<S>) {
         const requiresApproval = this.prepare !== BaseStep.prototype.prepare;
 
         return {
-          name: config.name,
           stepType: config.type,
-          shortDescription: config.shortDescription,
-          longDescription: config.longDescription,
-          yamlExample: config.yamlExample,
           schema: config.schema,
-          jsonSchema: z.toJSONSchema(config.schema),
           stepKind,
           requiresApproval,
         };

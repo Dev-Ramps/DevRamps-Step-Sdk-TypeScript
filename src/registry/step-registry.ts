@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import minimist from "minimist";
 import z from "zod";
-import type { BaseStep, StepMetadata } from "../base/base-step";
+import type { BaseStep, StepData, StepMetadata } from "../base/base-step";
 import type { SimpleStep } from "../base/simple-step";
 import type { PollingStep } from "../base/polling-step";
 import { StepLogger } from "../logging/step-logger";
@@ -152,18 +152,18 @@ export class StepRegistry {
     }
 
     try {
-      const metadata = instance.getMetadata();
+      const data = instance.getData();
 
       // Inject logger
       const logger = new StepLogger({
         logDir: this.logDir,
         executionId: this.executionId,
-        stepType: metadata.stepType,
+        stepType: data.stepType,
       });
       instance._setLogger(logger);
 
       // Validate params against the step's schema
-      const parseResult = metadata.schema.safeParse(params);
+      const parseResult = data.schema.safeParse(params);
       if (!parseResult.success) {
         this.writeOutput(
           StepOutputs.failed(
@@ -179,7 +179,7 @@ export class StepRegistry {
       // Route to appropriate phase based on step kind and input context
       const output = await this.routeExecution(
         instance,
-        metadata,
+        data,
         validatedParams,
         approvalContext,
         pollingState
@@ -195,14 +195,14 @@ export class StepRegistry {
 
   private async routeExecution(
     instance: BaseStep<unknown>,
-    metadata: StepMetadata,
+    data: StepData,
     params: unknown,
     approvalContext?: ApprovalContext,
     pollingState?: Record<string, unknown>
   ): Promise<StepOutput> {
-    const requiresApproval = metadata.requiresApproval;
+    const requiresApproval = data.requiresApproval;
 
-    if (metadata.stepKind === "simple") {
+    if (data.stepKind === "simple") {
       return this.routeSimpleStep(
         instance as SimpleStep<unknown>,
         params,
@@ -211,7 +211,7 @@ export class StepRegistry {
       );
     }
 
-    if (metadata.stepKind === "polling") {
+    if (data.stepKind === "polling") {
       return this.routePollingStep(
         instance as PollingStep<unknown, Record<string, unknown>>,
         params,
@@ -222,7 +222,7 @@ export class StepRegistry {
     }
 
     return StepOutputs.failed(
-      `Unknown step kind: ${metadata.stepKind}`,
+      `Unknown step kind: ${data.stepKind}`,
       "UNKNOWN_STEP_KIND"
     );
   }

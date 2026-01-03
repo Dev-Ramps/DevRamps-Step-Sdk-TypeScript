@@ -5,7 +5,7 @@ const path = require("path");
 const { execSync } = require("child_process");
 
 // Get optional folder name from command line args, default to "step-registry"
-const folderName = process.argv[2] || "step-registry";
+const folderName = process.argv[3] || "step-registry";
 
 // Define the base directory
 const baseDir = path.join(process.cwd(), folderName);
@@ -67,7 +67,10 @@ export class RealDeploymentService implements DeploymentService {
   }
 }
 `;
-fs.writeFileSync(path.join(srcDir, "deployment-service.ts"), deploymentServiceContent);
+fs.writeFileSync(
+  path.join(srcDir, "deployment-service.ts"),
+  deploymentServiceContent
+);
 
 // Create my-first-step.ts
 console.log("Creating my-first-step.ts...");
@@ -162,7 +165,7 @@ const tsconfigContent = `{
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src/**/*", "tst/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
 `;
@@ -277,16 +280,16 @@ describe("MyFirstStep", () => {
 fs.writeFileSync(path.join(tstStepsDir, "my-first-step.test.ts"), testContent);
 
 // Update package.json to add build and start scripts
-console.log('Adding build and start scripts to package.json...');
-const packageJsonPath = path.join(baseDir, 'package.json');
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+console.log("Adding build and start scripts to package.json...");
+const packageJsonPath = path.join(baseDir, "package.json");
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 packageJson.scripts = {
   ...packageJson.scripts,
   "build-step-registry": "tsc -p tsconfig.json",
   "start-step-registry": "node ./dist/index.js",
-  "test": "jest",
+  test: "jest",
   "test:watch": "jest --watch",
-  "test:coverage": "jest --coverage"
+  "test:coverage": "jest --coverage",
 };
 fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
