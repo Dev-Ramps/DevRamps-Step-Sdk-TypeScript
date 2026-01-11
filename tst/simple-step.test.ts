@@ -72,7 +72,7 @@ describe("SimpleStep", () => {
     class ApprovalStep extends SimpleStep<TestParams> {
       override async prepare(params: TestParams): Promise<PrepareOutput> {
         return StepOutputs.approvalRequired({
-          message: `Please approve: ${params.message}`,
+          context: `Please approve: ${params.message}`,
         });
       }
 
@@ -103,7 +103,7 @@ describe("SimpleStep", () => {
 
       expect(result.status).toBe("APPROVAL_REQUIRED");
       if (result.status === "APPROVAL_REQUIRED") {
-        expect(result.approvalRequest.message).toBe(
+        expect(result.approvalRequest.context).toBe(
           "Please approve: test action"
         );
       }

@@ -1,6 +1,6 @@
 {
   "name": "@devramps/sdk-typescript",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "SDK for building custom deployment steps for DevRamps",
   "main": "dist/index.js",
   "module": "dist/index.js",

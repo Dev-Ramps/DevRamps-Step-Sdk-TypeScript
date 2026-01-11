@@ -47,24 +47,11 @@ describe("StepOutputs helpers", () => {
   describe("approvalRequired", () => {
     it("creates an approval required output", () => {
       const output = StepOutputs.approvalRequired({
-        message: "Please approve this action",
-        approvers: ["admin@example.com"],
+        context: "Please approve this action",
       });
       expect(output.status).toBe("APPROVAL_REQUIRED");
-      expect(output.approvalRequest.message).toBe("Please approve this action");
-      expect(output.approvalRequest.approvers).toEqual(["admin@example.com"]);
+      expect(output.approvalRequest.context).toBe("Please approve this action");
       expect(PrepareOutputSchema.safeParse(output).success).toBe(true);
-    });
-
-    it("creates an approval required output with metadata", () => {
-      const output = StepOutputs.approvalRequired({
-        message: "Approve deployment",
-        metadata: { environment: "production", version: "1.0.0" },
-      });
-      expect(output.approvalRequest.metadata).toEqual({
-        environment: "production",
-        version: "1.0.0",
-      });
     });
   });
 
@@ -103,7 +90,7 @@ describe("Output schema validation", () => {
     const outputs = [
       StepOutputs.success(),
       StepOutputs.failed("error"),
-      StepOutputs.approvalRequired({ message: "approve" }),
+      StepOutputs.approvalRequired({ context: "approve" }),
       StepOutputs.triggered({ id: "1" }),
       StepOutputs.pollAgain({ id: "1" }),
     ];
@@ -121,7 +108,7 @@ describe("Output schema validation", () => {
   });
 
   it("PrepareOutputSchema validates approval required and failed outputs", () => {
-    const approvalOutput = StepOutputs.approvalRequired({ message: "test" });
+    const approvalOutput = StepOutputs.approvalRequired({ context: "test" });
     const failedOutput = StepOutputs.failed("error");
 
     expect(PrepareOutputSchema.safeParse(approvalOutput).success).toBe(true);

@@ -285,7 +285,7 @@ const packageJsonPath = path.join(baseDir, "package.json");
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 packageJson.scripts = {
   ...packageJson.scripts,
-  "build-step-registry": "tsc -p tsconfig.json",
+  "build-step-registry": "npm install && tsc -p tsconfig.json",
   "start-step-registry": "node ./dist/index.js",
   test: "jest",
   "test:watch": "jest --watch",

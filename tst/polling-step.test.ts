@@ -151,7 +151,7 @@ describe("PollingStep", () => {
     class ApprovalPollingStep extends PollingStep<JobParams, JobPollingState> {
       override async prepare(params: JobParams): Promise<PrepareOutput> {
         return StepOutputs.approvalRequired({
-          message: `Approve job for ${params.target}?`,
+          context: `Approve job for ${params.target}?`,
         });
       }
 
@@ -186,7 +186,7 @@ describe("PollingStep", () => {
 
       expect(result.status).toBe("APPROVAL_REQUIRED");
       if (result.status === "APPROVAL_REQUIRED") {
-        expect(result.approvalRequest.message).toBe(
+        expect(result.approvalRequest.context).toBe(
           "Approve job for production?"
         );
       }

@@ -65,7 +65,7 @@ describe("@Step decorator", () => {
     class ApprovalTestStep extends SimpleStep<TestParams> {
       override async prepare(params: TestParams): Promise<PrepareOutput> {
         return StepOutputs.approvalRequired({
-          message: `Approve ${params.value}?`,
+          context: `Approve ${params.value}?`,
         });
       }
 
@@ -137,7 +137,7 @@ describe("@Step decorator", () => {
     > {
       override async prepare(params: TestParams): Promise<PrepareOutput> {
         return StepOutputs.approvalRequired({
-          message: `Approve polling for ${params.value}?`,
+          context: `Approve polling for ${params.value}?`,
         });
       }
 

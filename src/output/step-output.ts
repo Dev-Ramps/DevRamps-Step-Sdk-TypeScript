@@ -36,9 +36,7 @@ export type SuccessOutput = z.infer<typeof SuccessOutputSchema>;
 const ApprovalRequiredOutputSchema = z.object({
   status: z.literal("APPROVAL_REQUIRED"),
   approvalRequest: z.object({
-    message: z.string(),
-    approvers: z.array(z.string()).optional(),
-    metadata: z.record(z.string(), z.any()).optional(),
+    context: z.string().optional(),
   }),
 });
 
@@ -47,7 +45,9 @@ export const PrepareOutputSchema = z.discriminatedUnion("status", [
   FailedOutputSchema,
 ]);
 
-export type ApprovalRequiredOutput = z.infer<typeof ApprovalRequiredOutputSchema>;
+export type ApprovalRequiredOutput = z.infer<
+  typeof ApprovalRequiredOutputSchema
+>;
 export type PrepareOutput = z.infer<typeof PrepareOutputSchema>;
 
 // =============================================================================
@@ -141,11 +141,7 @@ export const StepOutputs = {
   },
 
   // Approval required (used by prepare phase)
-  approvalRequired(request: {
-    message: string;
-    approvers?: string[];
-    metadata?: Record<string, unknown>;
-  }): ApprovalRequiredOutput {
+  approvalRequired(request: { context?: string }): ApprovalRequiredOutput {
     return { status: "APPROVAL_REQUIRED", approvalRequest: request };
   },
 

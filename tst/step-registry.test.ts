@@ -44,7 +44,7 @@ class EchoStep extends SimpleStep<EchoParams> {
 class ApprovalEchoStep extends SimpleStep<EchoParams> {
   override async prepare(params: EchoParams): Promise<PrepareOutput> {
     return StepOutputs.approvalRequired({
-      message: `Approve echo: ${params.message}`,
+      context: `Approve echo: ${params.message}`,
     });
   }
 
@@ -98,7 +98,7 @@ class DeployStep extends PollingStep<DeployParams, DeployPollingState> {
 class ApprovalDeployStep extends PollingStep<DeployParams, DeployPollingState> {
   override async prepare(params: DeployParams): Promise<PrepareOutput> {
     return StepOutputs.approvalRequired({
-      message: `Approve deployment to ${params.target}?`,
+      context: `Approve deployment to ${params.target}?`,
     });
   }
 
@@ -337,7 +337,7 @@ describe("Step execution", () => {
 
       expect(result.status).toBe("APPROVAL_REQUIRED");
       if (result.status === "APPROVAL_REQUIRED") {
-        expect(result.approvalRequest.message).toBe(
+        expect(result.approvalRequest.context).toBe(
           "Approve echo: sensitive action"
         );
       }
@@ -420,7 +420,7 @@ describe("Step execution", () => {
 
       expect(result.status).toBe("APPROVAL_REQUIRED");
       if (result.status === "APPROVAL_REQUIRED") {
-        expect(result.approvalRequest.message).toBe(
+        expect(result.approvalRequest.context).toBe(
           "Approve deployment to production?"
         );
       }
