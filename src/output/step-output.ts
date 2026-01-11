@@ -6,7 +6,6 @@ import z from "zod";
 
 export const ApprovalContextSchema = z.object({
   approved: z.literal(true),
-  approverId: z.string(),
 });
 
 export type ApprovalContext = z.infer<typeof ApprovalContextSchema>;

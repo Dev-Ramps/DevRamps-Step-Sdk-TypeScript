@@ -60,7 +60,7 @@ import type {
  *
  *   async prepare(params: DangerousParams): Promise<PrepareOutput> {
  *     return StepOutputs.approvalRequired({
- *       message: `Run dangerous job on ${params.target}?`,
+ *       context: `Run dangerous job on ${params.target}?`,
  *     });
  *   }
  *

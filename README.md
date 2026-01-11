@@ -124,9 +124,7 @@ class DeleteUserStep extends SimpleStep<DeleteUserParams> {
   // Override prepare to require approval
   async prepare(params: DeleteUserParams) {
     return StepOutputs.approvalRequired({
-      message: `Delete user ${params.userId}? Reason: ${params.reason}`,
-      approvers: ["admin@example.com"],
-      metadata: { userId: params.userId },
+      context: `Delete user ${params.userId}? Reason: ${params.reason}`,
     });
   }
 
@@ -164,8 +162,7 @@ type DeployState = {
 class ProductionDeployStep extends PollingStep<ProductionDeployParams, DeployState> {
   async prepare(params: ProductionDeployParams) {
     return StepOutputs.approvalRequired({
-      message: `Deploy ${params.service} v${params.version} to production?`,
-      approvers: ["release-manager@example.com", "oncall@example.com"],
+      context: `Deploy ${params.service} v${params.version} to production?`,
     });
   }
 
@@ -214,9 +211,7 @@ StepOutputs.failed("Not found", "NOT_FOUND");
 
 // Approval required (used in prepare method)
 StepOutputs.approvalRequired({
-  message: "Please approve this action",
-  approvers: ["admin@example.com"],  // optional
-  metadata: { key: "value" },         // optional
+  context: "Please approve this action",  // optional
 });
 
 // Triggered with polling state (used in PollingStep.trigger)
@@ -406,8 +401,7 @@ type MigrationState = {
 class MigrationStep extends PollingStep<z.infer<typeof MigrationSchema>, MigrationState> {
   async prepare(params: z.infer<typeof MigrationSchema>) {
     return StepOutputs.approvalRequired({
-      message: `Run migration ${params.version} on ${params.database}?`,
-      approvers: ["dba@example.com"],
+      context: `Run migration ${params.version} on ${params.database}?`,
     });
   }
 

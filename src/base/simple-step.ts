@@ -39,7 +39,7 @@ import type { ApprovalContext, RunOutput, StepOutput } from "../output/step-outp
  *
  *   async prepare(params: DeleteUserParams): Promise<PrepareOutput> {
  *     return StepOutputs.approvalRequired({
- *       message: `Delete user ${params.userId}?`,
+ *       context: `Delete user ${params.userId}?`,
  *     });
  *   }
  *
